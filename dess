@@ -1,0 +1,225 @@
+for(i=0;i<document.styleSheets.length;i++) {
+    void(document.styleSheets.item(i).disabled=true);
+}
+el = document.getElementsByTagName('*');
+for ( i=0; i<el.length; i++) {
+    void(el[i].style.cssText = '');
+}
+
+
+javascript:(function(){
+	%20var%20i,x;for(i=0;x=document.styleSheets[i];++i)x.disabled=true;})();
+
+
+avascript:(function(){$('[style]').removeAttr('style'); $('link[type="text/css"]').remove(); $('style').remove();})();
+
+
+javascript:
+for(i=0;i<document.styleSheets.length;i++){
+	void(document.styleSheets.item(i).disabled=true);}el=document.getElementsByTagName('*');for(i=0;i<el.length;i++){void(el%5Bi%5D.style.cssText='');}
+
+
+Disable MediaQueries / Responsive Webdesign
+
+The code
+[].slice.call(document.styleSheets).forEach(function(sheet) {
+[].slice.call(sheet.cssRules).forEach(function(rule) {
+if (rule.media){     rule.cssText = rule.cssText.replace(/(screen|all|handheld)/, "**$1**");}
+});
+ });
+
+CSS tree
+document.styleSheets[0]
+- cssRules
+- CSSStyleRule
+- cssText "body {max-width:80%;}"
+- CSSMediaRule           "@media screen and (max-width: 800px) {...}
+- cssRules
+- CSSStyleRule
+- cssText "body {width:100%;}"
+
+
+javascript:(function(){function d(a,b){a.setAttribute("data-css-storage",b)}function e(a){var b=a.getAttribute("data-css-storage");a.removeAttribute("data-css-storage");return b}var c=[];(function(){var a=document.body,b=a.hasAttribute("data-css-disabled");b?a.removeAttribute("data-css-disabled"):a.setAttribute("data-css-disabled","");return b})()?(c=document.querySelectorAll("[data-css-storage]"),[].slice.call(c).forEach(function(a){"STYLE"===a.tagName?a.innerHTML=e(a):"LINK"===a.tagName?a.disabled=!1:a.style.cssText=e(a)})):(c=document.querySelectorAll("[style], link, style"),[].slice.call(c).forEach(function(a){"STYLE"===a.tagName?(d(a,a.innerHTML),a.innerHTML=""):"LINK"===a.tagName?(d(a,""),a.disabled=!0):(d(a,a.style.cssText),a.style.cssText="")}))})();
+
+
+javascript:x=document.querySelectorAll('link,style,[style]');for(i=x.length;i--;)e=x[i],e.style.cssText?e.style.cssText='':e.outerHTML=''
+
+
+
+javascript:(function(){s=document.createElement('script');s.type='text/javascript';s.src='https://raw.github.com/davatron5000/deCSS3/master/deCSS3.js?v='+parseInt(Math.random()*99999999);document.body.appendChild(s);})();
+
+
+var deCSS3 = {
+
+  init: function ( addedStyles ) {
+
+    this.addedStyles = addedStyles;
+    this.toggleModernizr();
+
+    var appendStyle = document.createElement( 'style' );
+
+    if ( ! addedStyles || ! addedStyles.length ) {
+      this.overrideRules();
+      appendStyle.className = 'deCSS3-Style';
+      appendStyle.textContent = this.addStyleBlock();
+      document.body.appendChild( appendStyle );
+    }
+    else {
+      // Remove the injected ones
+      [].forEach.call( addedStyles, function( elem ) {
+        elem.parentNode.removeChild( elem );
+      });
+      // Inject the old versions back in and delete the placeholders
+      [].forEach.call( document.querySelectorAll( '.deCSS3-Placeholder' ), function ( elem ) {
+        var appendStyle = document.createElement( 'style' );
+        appendStyle.textContent = elem.innerHTML;
+        elem.parentNode.insertBefore( appendStyle, elem );
+        elem.parentNode.removeChild( elem );
+      });
+    }
+  },
+
+
+  addStyleBlock: function () {
+    // TODO: background-clip, background-origin, background-size?, animation
+    var that  = this,
+        rules = [
+      "animation-name:none",
+      "border-radius:0",
+      "box-shadow:none",
+      "column-span:all",
+      "text-shadow:none",
+      "transform:none",
+      "transition:none",
+      "animation:none",
+      "background-clip:border-box",
+      "background-origin:0 0",
+      "background-size:auto",
+      "border-image:none"
+    ];
+
+    return '*, *:before, *:after {' + rules.map(function( v ){ return that.addPrefixes( v ); }).join( "" ) + '}';
+  },
+
+  addPrefixes: function ( rule ) {
+    var prefixes = [ '-webkit-','-moz-','-o-', '-ms-', '-khtml-' ],
+        postfix  = ' !important;';
+    return prefixes.join( rule + postfix ) + rule + postfix + rule + postfix;
+  },
+
+  /**
+   * TODO: write function that detects certain CSS3 rules and emptys out the rule to override
+   * e.g., rgba(0,0,0,0.4) can be overriden by rgba()
+   *
+   * @rules = multiplebg images, mediaqueries, background-size?, @font-face?
+   */
+
+  overrideRules: function () {
+    var ruleSets = {
+          column : {
+            regex    : /column-count(.*?)\;/g,
+            sentinel : 'column-count',
+            repl     : 'column-count: 1;'
+          },
+          rgba   : {
+            regex    : /rgba\((.*?)\)\;/g,
+            sentinel : 'rgba',
+            repl     : 'rgba();'
+          },
+          hsla   : {
+            regex    : /hsla\((.*?)\)\;/g,
+            sentinel : 'hsla',
+            repl     : 'hsla();'
+          },
+          linear : {
+            regex    : /linear-gradient\((.*?)\)\;/g,
+            sentinel : 'linear-gradient',
+            repl     : 'linear-gradient();'
+          }
+        },
+        rFound   = /\@media|column-count|rgba|hsla|linear-gradient/g,
+        ruleReplacer = function ( found, newRule, sentinel, regex, repl ) {
+          if ( found && ~ found.indexOf( sentinel ) ) {
+            newRule = newRule.replace( regex, repl );
+          }
+          return newRule;
+        };
+
+    // Go through each stylesheet and return an array of new rules for each, then convert to string
+    [].forEach.call( document.styleSheets, function ( stylesheet ) {
+      var newRules = "",
+          oldRules = "",
+          stylePlaceholder = document.createElement( 'div' ),
+          appendStyle = document.createElement( 'style' );
+
+      // Bail if there are no styles
+      if ( ! stylesheet.cssRules ) {
+        return;
+      }
+
+      // Find the rules we want to delete
+      [].forEach.call( stylesheet.cssRules, function ( rule, idx ) {
+        var ruleText = rule.cssText,
+            found    = ruleText.match( rFound ),
+            i, ruleSet;
+
+        oldRules += ruleText;
+        newRule = ruleText;
+
+        // Loop through each rule set and apply it to this css rule
+        for ( i in ruleSets ) {
+          ruleSet = ruleSets[ i ];
+          newRule = ruleReplacer( found, newRule, ruleSet.sentinel, ruleSet.regex, ruleSet.repl );
+        }
+
+        // Add to rule list
+        newRules += newRule;
+      });
+
+      // Create a placeholder element to hold the old rules
+      stylePlaceholder.className = 'deCSS3-Placeholder';
+      stylePlaceholder.style.display = 'none';
+      stylePlaceholder.innerHTML = oldRules;
+
+      // Create the modified styles
+      appendStyle.className = 'deCSS3-Style';
+      appendStyle.textContent = newRules;
+
+      // Inject the new style
+      stylesheet.ownerNode.parentNode.insertBefore( appendStyle, stylesheet.ownerNode );
+      // Inject the placeholder style (to maintain order)
+      stylesheet.ownerNode.parentNode.insertBefore( stylePlaceholder, stylesheet.ownerNode );
+      // delete the old one
+      stylesheet.ownerNode.parentNode.removeChild( stylesheet.ownerNode );
+
+      // Just in case
+      if ( stylesheet ) {
+        stylesheet.disabled = true;
+      }
+    });
+  },
+
+  toggleModernizr: function(){
+    if (!window.Modernizr) return;
+
+    var newclasses = document.documentElement.className,
+        clear = ( ! this.addedStyles || ! this.addedStyles.length ),
+        bool, regex, match
+
+    for (var feat in Modernizr){
+      bool = Modernizr[feat];
+      regex = RegExp('(?:^|\\s)(no-)?' + feat + '(?:\\s|$)');
+      match = newclasses.match(regex);
+
+      if (match){
+        newclasses = newclasses.replace(regex, (( clear           ? ' no-' :
+                                                  Modernizr[feat] ? ' '    :
+                                                  ' no-')
+                                                   + feat) + ' ');
+      }
+    }
+    document.documentElement.className = newclasses;
+  }
+}
+// Auto-init
+deCSS3.init( document.querySelectorAll( '.deCSS3-Style' ) );
